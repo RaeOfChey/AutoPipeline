@@ -1,0 +1,74 @@
+name: Deploy to Render
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Deploy to Render
+        run: |
+          curl -X POST https://api.render.com/deploy/success \
+          -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+          -d "{
+            \"service\": \"your-render-service-name\"
+          }"
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+
+
+Vversion: 2.1
+
+orbs:
+  cypress: cypress-io/cypress@3.3.3
+
+jobs:
+  start-server:
+    docker:
+      - image: cypress/base:latest
+    steps: 
+      - checkout
+      - run:
+          name: Install Deps
+          command: npm install
+      - run:
+          name: Build
+          command: npm runbuild
+
+  deploy-to-staging:
+    docker:
+      - image: cimg/base:current
+    steps:
+      - run:
+          name: Deploy to Staging
+          commands: |
+            echo "Deploying to Staging"
+            curl $RENDER_STAGING_DEPLOYHOOK
+
+workflows:
+  run-tests-and-stage-workflow:
+    jobs:
+      - start-server
+      - cypress/run:
+          name: run-component-tests
+          command: npx cypress run --comoponent
+      - deploy-to-staging:
+          requires:
+            - run-component-tests
+          filters:
+            branches:
+              only: main
