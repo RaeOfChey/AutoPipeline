@@ -1,6 +1,8 @@
 version: 2.1
+
 orbs:
   cypress: cypress-io/cypress@3.3.1
+
 jobs:
   start-server:
         docker:
@@ -22,18 +24,18 @@ jobs:
           command: |
             echo "Deploying to Render Staging"
             curl $RENDER_STAGING_DEPLOYHOOK
-  deploy-to-production:
+  deploy-to-render-production:
     docker:
       - image: cimg/base:current
     steps:
       - run:
-          name: Deploy to Production
+          name: Deploy to Render Production
           command: |
-            echo "Deploying to Render Production"
+            echo "Deploying to Render production"
             curl $RENDER_PRODUCTION_DEPLOYHOOK
 
 workflows:
-  run-tests-and-stage-then-hold-for-prod:
+  run-tests-and-deploy-to-staging-hold-then-production:
     jobs:
       - start-server
       - cypress/run:
@@ -46,9 +48,12 @@ workflows:
             branches:
               only: main
       - hold:
+          # TODO: How can we provide approval for the hold job?
           type: approval
-          requires: deploy-to-staging
-      - deploy-to-production:
+          requires:
+            - deploy-to-render-staging
+      - deploy-to-render-production:
+          # TODO: Why can we specify that the only requirement for this job is the hold job?
           requires:
             - hold
           filters:
