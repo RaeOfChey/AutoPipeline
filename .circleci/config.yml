@@ -22,8 +22,18 @@ jobs:
           command: |
             echo "Deploying to Render Staging"
             curl $RENDER_STAGING_DEPLOYHOOK
+  deploy-to-production:
+    docker:
+      - image: cimg/base:current
+    steps:
+      - run:
+          name: Deploy to Production
+          command: |
+            echo "Deploying to Render Production"
+            curl $RENDER_PRODUCTION_DEPLOYHOOK
+
 workflows:
-  run-tests-and-deploy-to-staging:
+  run-tests-and-stage-then-hold-for-prod:
     jobs:
       - start-server
       - cypress/run:
@@ -32,6 +42,15 @@ workflows:
       - deploy-to-render-staging:
           requires:
             - run-component-tests
+          filters:
+            branches:
+              only: main
+      - hold:
+          type: approval
+          requires: deploy-to-staging
+      - deploy-to-production:
+          requires:
+            - hold
           filters:
             branches:
               only: main
