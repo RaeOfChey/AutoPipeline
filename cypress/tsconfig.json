@@ -1,9 +1,17 @@
 {
-    "extends": "../tsconfig.json",
-      "compilerOptions": {
-        "target": "es5",
-        "lib": ["es5", "dom"],
-        "types": ["cypress", "node"]
-      },
-      "include": ["**/*.ts"]
-  }  
+  "extends": "../tsconfig.json", // Inherit from the root tsconfig
+  "compilerOptions": {
+    "target": "es5", 
+    "lib": ["es5", "dom"], 
+    "types": ["cypress", "node"],
+    "outDir": "./dist",  // Ensure the transpiled files go into a separate folder (e.g., dist)
+    "noEmit": false      // Ensure Cypress .ts files are emitted as .js
+  },
+  "include": [
+    "**/*.ts"  // Only include TypeScript files for Cypress
+  ],
+  "exclude": [
+    "../node_modules",  // Exclude external dependencies
+    "../dist"            // Ensure we don't include the output directory in the build process
+  ]
+}
